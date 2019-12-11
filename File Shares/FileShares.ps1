@@ -1,26 +1,20 @@
 <#
 .SYNOPSIS
 This script grabs all shared folders in the current server along with their shared path, disk path and permsissions
-
 .DESCRIPTION
 Options:
-
   -help                  - Display the current help menu
   -silent                - Run the script without printing anything
   -api  <string>         - Declare a file name for an API config file to post flex asset directly to IT Glue 
   -file <string>         - Declare a location to save script output to as a csv
   -organization <string> - Declare the name of the organization
-
 .NOTES
 This script is largely a modification on grolo's "Audit File Share Perms" script available at http://poshcode.org/3398.
 We thank grolo for doing a lot of the heavy lifting for us.
-
 Author: Mark Jacobs
 Author: Caleb Albers
-
 .LINK
 https://github.com/itglue/automation
-
 #>
 
 [cmdletbinding()]
@@ -54,8 +48,8 @@ function writeOutput {
     Write-Host "Disk Path:  `t" -ForegroundColor Gray -NoNewline
     Write-Host "`t `t" $DiskPath "`n"
 
-    <#Write-Host "Permissions:  `t" -ForegroundColor Gray -NoNewline
-    Write-Host "`t `t" $permissions "`n"#>
+    Write-Host "Permissions:  `t" -ForegroundColor Gray -NoNewline
+    Write-Host "`t `t" $permissions "`n"
 }
 
 function updateAPIConfigFile {
@@ -167,10 +161,10 @@ else {
     $computer = $env:COMPUTERNAME
     $SaveData = @()
 
-    $Files = gwmi -Class win32_share -ComputerName $computer -Filter "Type=0" | Where-Object{$_.Name -NotMatch "^print|^NETLOGON|^MTATempStore|^prnproc"}
-    $shares = $Files| select -ExpandProperty Name
-    $description =  $Files| select -ExpandProperty Description
-    $path = $Files| select -ExpandProperty Path
+    $Files = Get-WmiObject -Class win32_share -ComputerName $computer -Filter "Type=0" | Where-Object{$_.Name -NotMatch "^print|^NETLOGON|^MTATempStore|^prnproc"}
+    $shares = $Files| Select-Object -ExpandProperty Name
+    $description =  $Files| Select-Object -ExpandProperty Description
+    $path = $Files| Select-Object -ExpandProperty Path
     $server= ([regex]::matches($Files, "(?<=[\\][\\])[^\\]+"))
 
     $i=0
@@ -238,13 +232,13 @@ else {
                         $api__org_id = $api__body.data.attributes.organization_id
                         $api__flex_asset_id = $api_config.flex_asset_id
                         
-                        if($api__org_id) {
+                        #if($api__org_id) {
                             Write-Host "Creating a new flexible asset."
 
                             $api__output_data = New-ITGlueFlexibleAssets -data $api__body
 
                             $api__output_data
-                        }
+                        #}
                     }
                     else {
                         Write-Error "ERROR: File Shares flex asset configuration file was found. Please create one and re-run the script."
